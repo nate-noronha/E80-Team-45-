@@ -74,8 +74,9 @@ void loop() {
   //       void motorDriver.drive(int motorA_power,int motorB_power,int motorC_power); 
   // the value of motorX_power can range from -255 to 255, and sets the PWM applied to the motor 
   // The following example will turn on motor B for four seconds between seconds 4 and 8 
-  if (currentTime > 10000 && currentTime <14000) {
-    motorDriver.drive(0,0,-120);
+  if (currentTime > 10000 && currentTime <14000) { 
+      //add more initial time(30ishseconds) because we need to put the motherboard in the box, then in the robot, secure with velcro, then put in tank, so just add more time to each else function
+    motorDriver.drive(0,0,-120);  // for the motorDrive.drive, they are all good, except we might need to change during lab depending on which motor is defined as A, B, C, etc)
   
   } else if (currentTime > 14000 && currentTime < 18000)
   {
