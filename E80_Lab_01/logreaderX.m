@@ -46,49 +46,48 @@ end
 fclose(fid);
 
 %% Process your data here
-% plot(accelX)
-% title('Acceleration in Teensy Units')
-% xlabel('Sample #')
-% ylabel('Teensy Units')
-% hold on;
-% plot(accelY)
-% hold on;
-% plot(accelZ)
-% hold off;
-% legend('Acceleration X-direction','Acceleration Y-direction', 'Acceleration Z-direction');
-% x = accelX
-% y = accelY 
+bar = mean(accelX); %mean of all Y values
+S = std(accelX);    %standard deviation of Y values
+N = length(accelX)  %length of accelY 
+df = N-1            %degrees of freedom
+ESE = S/sqrt(N)     %
+t = 1.999
+lambda = t * ESE
 
-% compute mean, standard deviation, standard error, and 95% confidence
-% bounds for static accel in the z direction
+% Create the uncertainty line for the Y data
+upperBound = bar + lambda
+lowerBound = bar - lambda
 
 
-f1 = figure;
-f2 = figure;
+%plot 3 accel datas
 
-subplot(3,1,1)
-%put each Z plot, X plot, and Y plot into its own plot in the subplots
-subplot(3,1,1)
-plot(accelX);
-title('Zero in X-direction');
-xlabel('Sample #');
-ylabel('Teensy Units');
-legend('Acceleration X-direction')
-hold on;
-subplot(3,1,3)
-plot(accelZ);
-title('Acceleration in Z-direction');
-xlabel('Sample #');
-ylabel('Teensy Units');
-legend('Acceleration Z-direction')
-hold on;
-subplot(3,1,2)
-plot(accelY);
-title('Acceleration in Y-direction');
-xlabel('Sample #');
-ylabel('Teensy Units');
-legend('Acceleration Y-direction')
-hold off;
+figure
+plot(accelX, '.')
+hold on
+plot(accelY, '.')
+plot(accelZ, '.')
+
+
+
+% create mean and CL lines for zero in Z
+yline(bar, 'b-', 'Mean X')
+yline(upperBound, 'r--', 'CI upper')
+yline(lowerBound, 'r--', 'CI lower')
+
+
+%label everything
+ylabel('Teensy Units')
+xlabel('Sample Number')
+title('Lab Trial: Zero in X')
+legend('X data', 'Y data', 'Z data', 'Mean Z', 'CI bounds')
+
+
+
+
+
+
+
+
 
 
 
