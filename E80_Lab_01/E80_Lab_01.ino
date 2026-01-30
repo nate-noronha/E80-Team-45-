@@ -51,6 +51,8 @@ void setup() {
   logger.include(&motorDriver);
   logger.init();
 
+  delay(5000);
+
   /* Initialise the sensors */
   imu.init();
 
@@ -74,11 +76,22 @@ void loop() {
   //       void motorDriver.drive(int motorA_power,int motorB_power,int motorC_power); 
   // the value of motorX_power can range from -255 to 255, and sets the PWM applied to the motor 
   // The following example will turn on motor B for four seconds between seconds 4 and 8 
-  if (currentTime > 4000 && currentTime <8000) {
-    motorDriver.drive(0,120,0);
-  } else {
+  if (currentTime > 45000 && currentTime <49000) {
+    motorDriver.drive(0,0,255);
+  
+  } else if (currentTime > 49000 && currentTime < 53000)
+  {
+    motorDriver.drive(255,255,0);
+  } else if (currentTime > 53000 && currentTime < 60000)
+  {
+    motorDriver.drive(0,0,-255);
+  }
+  else
+  {
     motorDriver.drive(0,0,0);
   }
+    
+    
 
   // DONT CHANGE CODE BELOW THIS LINE 
   // --------------------------------------------------------------------------
