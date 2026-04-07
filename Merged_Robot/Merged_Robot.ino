@@ -1,6 +1,6 @@
 /********
-Default E80 Code + RGB Sensor + Pressure Display
-Fix: add ZStateEstimator so pressure voltage/depth appears in serial
+Default E80 Code + RGB Sensor
+Fix: print RGB through Printer so it actually shows up
 ********/
 
 #include <Arduino.h>
@@ -13,7 +13,6 @@ Fix: add ZStateEstimator so pressure voltage/depth appears in serial
 #include <SensorGPS.h>
 #include <SensorIMU.h>
 #include <XYStateEstimator.h>
-#include <ZStateEstimator.h>
 #include <ADCSampler.h>
 #include <ErrorFlagSampler.h>
 #include <ButtonSampler.h> // A template of a data source library
@@ -31,7 +30,6 @@ Fix: add ZStateEstimator so pressure voltage/depth appears in serial
 
 MotorDriver motor_driver;
 XYStateEstimator state_estimator;
-ZStateEstimator z_state_estimator;
 SurfaceControl surface_control;
 SensorGPS gps;
 Adafruit_GPS GPS(&UartSerial);
@@ -79,7 +77,6 @@ void setup() {
   logger.include(&imu);
   logger.include(&gps);
   logger.include(&state_estimator);
-  logger.include(&z_state_estimator);
   logger.include(&surface_control);
   logger.include(&motor_driver);
   logger.include(&adc);
@@ -100,7 +97,6 @@ void setup() {
 
   surface_control.init(number_of_waypoints, waypoints, DELAY);
   state_estimator.init();
-  z_state_estimator.init();
 
   printer.printMessage("Starting main loop",10);
   loopStartTime = millis();
@@ -111,7 +107,6 @@ void setup() {
   ef.lastExecutionTime              = loopStartTime - LOOP_PERIOD + ERROR_FLAG_LOOP_OFFSET;
   button_sampler.lastExecutionTime  = loopStartTime - LOOP_PERIOD + BUTTON_LOOP_OFFSET;
   state_estimator.lastExecutionTime = loopStartTime - LOOP_PERIOD + XY_STATE_ESTIMATOR_LOOP_OFFSET;
-  z_state_estimator.lastExecutionTime = loopStartTime - LOOP_PERIOD + Z_STATE_ESTIMATOR_LOOP_OFFSET;
   surface_control.lastExecutionTime = loopStartTime - LOOP_PERIOD + SURFACE_CONTROL_LOOP_OFFSET;
   logger.lastExecutionTime          = loopStartTime - LOOP_PERIOD + LOGGER_LOOP_OFFSET;
   burst_adc.lastExecutionTime       = loopStartTime;
@@ -144,8 +139,7 @@ void loop() {
     printer.printValue(7,motor_driver.printState());
     printer.printValue(8,imu.printRollPitchHeading());
     printer.printValue(9,imu.printAccels());
-    printer.printValue(10,z_state_estimator.printState());
-    printer.printValue(11,rgbState);
+    printer.printValue(10,rgbState);
     printer.printToSerial();  // To stop printing, just comment this line out
   }
 
@@ -182,19 +176,14 @@ void loop() {
 
   if ( currentTime - imu.lastExecutionTime > LOOP_PERIOD ) {
     imu.lastExecutionTime = currentTime;
-    imu.read();
+    imu.read();     // blocking I2C calls
   }
 
-  gps.read(&GPS);
+  gps.read(&GPS); // blocking UART calls, need to check for UART every cycle
 
   if ( currentTime - state_estimator.lastExecutionTime > LOOP_PERIOD ) {
     state_estimator.lastExecutionTime = currentTime;
     state_estimator.updateState(&imu.state, &gps.state);
-  }
-
-  if ( currentTime - z_state_estimator.lastExecutionTime > LOOP_PERIOD ) {
-    z_state_estimator.lastExecutionTime = currentTime;
-    z_state_estimator.updateState(analogRead(PRESSURE_PIN));
   }
 
   if ( currentTime - led.lastExecutionTime > LOOP_PERIOD ) {
