@@ -4,7 +4,7 @@
 clear;
 %clf;
 
-filenum = '043'; % file number for the data you want to read
+filenum = '020'; % file number for the data you want to read
 infofile = strcat('INF', filenum, '.TXT');
 datafile = strcat('LOG', filenum, '.BIN');
 
@@ -14,7 +14,7 @@ dataSizes.('ulong') = 4;
 dataSizes.('int') = 4;
 dataSizes.('int32') = 4;
 dataSizes.('uint8') = 1;
-dataSizes.('uint16') = 2;
+dataSizes.('uint16') = 2
 dataSizes.('char') = 1;
 dataSizes.('bool') = 1;
 
@@ -45,120 +45,111 @@ for i=1:numel(varTypes)
 end
 fclose(fid);
 
+
 %% Process your data here
-
-%%Section 2.3 
-
-% %define x and y acceleration in the appropriate units (mg -> m/s^2)
-% ax = accelX*0.0098; %m/s^2
-% ay = accelY*0.0098; 
-% 
-% %remove bias
-% ax = ax - mean(ax(1:100)); %offset!
-% ay = ay - mean(ay(1:100));
-% 
-% %create time vector
-% LOOP_PERIOD = 99;
-% dt = LOOP_PERIOD / 1000;
-% t = (0:length(ax)-1)*dt; 
-% 
-% %integrate
-% vx = cumtrapz(t, ax);
-% vy = cumtrapz(t, ay);
-% 
-% x = cumtrapz(t, vx);
-% y = cumtrapz(t, vy);
-% 
-% %ideal path
-% idealx = [0 0.5 0];
-% idealy = [0 0 0];
-% 
-% %uncertainty bounds
-% sigma = std(ay(1:end)); %standard dev of Gaussian white noise
-% confLev = 0.95;
-% lambda = sqrt(2)*erfinv(confLev)*sigma;
-% lambda2 = lambda*(2/3)*sqrt(dt)*t'.^(3/2); %z*sigma*f(t)
-% 
-% %establish upper and lower bounds
-% uppery = y + lambda2;
-% lowery = y - lambda2;
-% 
-% %plot 1
-% figure;
-% plot(x,y,'LineWidth',1.5) %actual
-% hold on
-% plot(idealx,idealy,'LineWidth',1.5) %ideal
-% title('Measured and ideal path of board')
-% xlabel('x (m)')
-% ylabel('y (m)')
-% legend('Measured path','Ideal path')
-% 
-% %plot 2
-% figure;
-% plot(t,y,'LineWidth',1.5)
-% hold on
-% plot(t,uppery,'LineWidth',1.5)
-% plot(t, lowery,'LineWidth',1.5)
-% xlabel('t (s)')
-% ylabel('y (m)')
-% title('Y position vs time with uncertainty bounds')
-% legend('Estimated position', 'Upper bound', 'lower bound')
-
-% 
-% 
-
-%%Section 3.3
-% LOOP_PERIOD = 99; % need for time axis (method robot records time)
-% 
-% N = min([length(depth), length(depth_des), length(uV)]); %lenght of data is all the same so no errors occur
-% dt = LOOP_PERIOD / 1000; %(change from ms to seconds)
-% t = 0:dt:(N-1)*dt; % time based on loop period and length of data
-% 
-% depth = depth(1:N);
-% depth_des = depth_des(1:N);
-% uV = uV(1:N);
-% 
-% figure
-% subplot(2,1,1)
-% 
-% plot(t, depth); 
-% hold on;
-% plot(t, depth_des);
-% 
-% xlabel('Time [s]');
-% ylabel('Depth [m]');
-% title('Depth and Desired Depth vs. Time');
-% legend('depth', 'depth_des', 'Location', 'best');
-% grid on;
-% 
-% subplot(2,1,2)
-% plot(t, uV);
-% xlabel('Time [s]');
-% ylabel('uV');
-% title('Vertical Motor Control Effort vs. Time [s]');
-% grid on;
-% 
-% 
-% N = min([length(clear), length(red), length(green), length(blue)]);
-% clear = clear(1:N);
-% red   = red(1:N);
-% green = green(1:N);
-% blue  = blue(1:N);
-
-
-%%rgb sensor??
-LOOP_PERIOD = 99;   
+LOOP_PERIOD = 99;
 dt = LOOP_PERIOD / 1000;
-t = 0:dt:(N-1)*dt;
+
+%% DEPTH — already converted by ZStateEstimator, logged as 'z'
+N = length(z);
+t = (0:N-1) * dt;
 
 figure;
-plot(t, red, 'r');
-hold on;
-plot(t, green, 'g');
-plot(t, blue, 'b');
-plot(t, clear, 'k');
+plot(t, z, 'b', 'LineWidth', 1.5);
+set(gca, 'YDir', 'reverse'); % flips it dowanrds, can change, just for intuition
+xlabel('Time [s]');
+ylabel('Depth [m]');
+title('Depth vs Time');
+grid on;
+
+%% RGB
+N_rgb = min([length(rgb_r), length(rgb_g), length(rgb_b), length(rgb_c)]);
+rgb_r_data = double(rgb_r(1:N_rgb));
+rgb_g_data = double(rgb_g(1:N_rgb));
+rgb_b_data = double(rgb_b(1:N_rgb));
+rgb_c_data = double(rgb_c(1:N_rgb));
+t_rgb = (0:N_rgb-1) * dt;
+
+% Raw counts vs time
+figure;
+plot(t_rgb, rgb_r_data, 'r', 'LineWidth', 1.5); hold on;
+plot(t_rgb, rgb_g_data, 'g', 'LineWidth', 1.5);
+plot(t_rgb, rgb_b_data, 'b', 'LineWidth', 1.5);
+plot(t_rgb, rgb_c_data, 'k', 'LineWidth', 1.5);
 xlabel('Time [s]');
 ylabel('Sensor Counts');
-title('TCS34725 Raw Color Readings vs Time');
+title('RGB Raw Readings vs Time');
 legend('Red','Green','Blue','Clear');
 grid on;
+
+% Attenuation vs depth — normalize to surface reference
+n_ref = 10; % samples to average for surface reference
+ref_r = mean(rgb_r_data(1:n_ref));
+ref_g = mean(rgb_g_data(1:n_ref));
+ref_b = mean(rgb_b_data(1:n_ref));
+
+T_r = rgb_r_data / ref_r;
+T_g = rgb_g_data / ref_g;
+T_b = rgb_b_data / ref_b;
+
+N_align = min(length(z), N_rgb);
+figure;
+plot(double(z(1:N_align)), T_r(1:N_align), 'r', 'LineWidth', 1.5); hold on;
+plot(double(z(1:N_align)), T_g(1:N_align), 'g', 'LineWidth', 1.5);
+plot(double(z(1:N_align)), T_b(1:N_align), 'b', 'LineWidth', 1.5);
+xlabel('Depth [m]');
+ylabel('Transmission Ratio');
+title('Light Attenuation vs Depth');
+legend('Red','Green','Blue');
+grid on;
+
+%% THERMISTOR — raw ADC only, conversion done here %%MAY NEED REWORKING%%
+% Proposal values: Rn=10k, Rf=47k, Rp=15k, Rg=10k
+Rn      = 10000;
+Rf_t    = 47000;
+gain_t  = Rf_t / Rn;
+Rp_t    = 15000;
+Rg_t    = 10000;
+Vplus_t = (Rg_t / (Rp_t + Rg_t)) * 5.0;
+R2      = 47000;
+VDD     = 5.0;
+THERM_B  = 4050 %murata data sheet, 25-50C
+THERM_R0 = 47000;
+THERM_T0 = 298.15;
+
+
+%NEED 6 POINTS, DO AS WE DID IN LAB 4, but 
+adc_therm = double(A01);
+Vout_t    = (adc_therm / 1023.0) * 3.3;
+Vin_t     = ((1 + gain_t) * Vplus_t - Vout_t) / gain_t;
+RT        = R2 .* (VDD ./ Vin_t - 1.0);
+invT      = (1.0 / THERM_T0) + (1.0 / THERM_B) .* log(RT / THERM_R0);
+tempC     = (1.0 ./ invT) - 273.15;
+tempC(tempC > 100) = NaN;
+tempC(tempC < -10) = NaN;
+
+N_t = length(tempC);
+t_t = (0:N_t-1) * dt;
+
+figure;
+plot(t_t, tempC, 'r', 'LineWidth', 1.5);
+xlabel('Time [s]');
+ylabel('Temperature [°C]');
+title('Thermistor: Temperature vs Time');
+grid on;
+
+
+%% TEMPERATURE VS DEPTH
+N_temp_depth = min(length(z), length(tempC));
+z_aligned    = double(z(1:N_temp_depth));
+tempC_aligned = tempC(1:N_temp_depth);
+
+figure;
+plot(tempC_aligned, z_aligned, 'r', 'LineWidth', 1.5);
+set(gca, 'YDir', 'reverse');  % deeper = down
+xlabel('Temperature [°C]');
+ylabel('Depth [m]');
+title('Temperature vs Depth');
+grid on;
+
+

@@ -41,4 +41,6 @@
 // Depth Control
 #define PRESSURE_PIN 14 // Teensy pin A00
 
+//Thermistor
+#define THERMISTOR_PIN 15  // Teensy pin A1
 #endif
