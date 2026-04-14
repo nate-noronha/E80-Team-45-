@@ -1,4 +1,5 @@
 /********
+Obstacle Course
 Default E80 Code
 Current Author:
     Wilson Ives (wives@g.hmc.edu) '20 (contributed in 2018)
