@@ -245,7 +245,7 @@ void loop() {
         depth_control.diveState = false;
         depth_control.surfaceState = true;
       }
-      motor_driver.drive(depth_control.uV, depth_control.uV, 0); // A,B vertical, c is off
+      motor_driver.drive(0, -depth_control.uV, -depth_control.uV); // A,B vertical, c is off
     }
     if (depth_control.surfaceState) {
       if (!depth_control.atSurface) {
@@ -253,7 +253,7 @@ void loop() {
       } else if (depth_control.complete) {
         delete[] depth_control.wayPoints;
       }
-      motor_driver.drive(depth_control.uV, depth_control.uV, 0);
+      motor_driver.drive(0, depth_control.uV, depth_control.uV);
     }
   }
 
