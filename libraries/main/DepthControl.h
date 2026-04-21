@@ -56,6 +56,7 @@ private:
   
   int diveDelay;
   int delayStartTime = 0;
+  int finalDelayStartTime = 0;
   int currentTime;
   bool delayed;
 };

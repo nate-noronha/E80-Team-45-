@@ -35,13 +35,19 @@ void DepthControl::dive(z_state_t * state, int currentTime_in) {
 
   uV = Kp * depth_error;
 
-  if (uV > 200) {
-    uV = 200;
+  if (uV > 255) {
+    uV = 255;
   }
   
-  else if (uV < -200) {
-    uV = -200;
+  else if (uV < -255) {
+    uV = -255;
   }
+  
+  if (delayed == 1) {
+    uV = 0;
+  }
+
+  
   //////////////////////////////////////////////////////////////////////
   
   ///////////////////////////////////////////////////////////////////////
@@ -133,11 +139,18 @@ void DepthControl::updatePoint(float z) {
       currentWayPoint++;
     } 
     if (currentWayPoint == totalWayPoints) {
-      changingWPMessage = "Got to final depth waypoint. Now surfacing";
-      atDepth = 1;
-      uV = 0;
-      cwpmTime = 10;
-      currentWayPoint = 0;
+      if (finalDelayStartTime == 0) finalDelayStartTime = currentTime;
+      if (currentTime < finalDelayStartTime + diveDelay) {
+        changingWPMessage = "Holding at final waypoint...";
+        delayed = 1;
+      } else {
+        changingWPMessage = "Got to final depth waypoint. Now surfacing";
+        atDepth = 1;
+        uV = 0;
+        cwpmTime = 10;
+        currentWayPoint = 0;
+        finalDelayStartTime = 0;
+      }
     }
     printer.printMessage(changingWPMessage,cwpmTime);
   }

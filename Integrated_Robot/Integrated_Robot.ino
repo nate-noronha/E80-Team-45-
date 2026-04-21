@@ -49,9 +49,8 @@ GPSLockLED led;
 BurstADCSampler burst_adc;
 SensorRGB rgb_sensor; 
 
-
 // COMMENT OUT WHEN DIVING
-#define THERMISTOR_TESTING   // <-- comment this line out for actual dive
+//#define THERMISTOR_TESTING   // <-- comment this line out for actual dive
 // Add these constants at the top of your .ino with your globals
 #ifdef THERMISTOR_TESTING
   const float THERM_B   = 4050.0; // B-constant from Murata datasheet
@@ -117,10 +116,10 @@ void setup() {
   motor_driver.init();
   led.init();
 
-  //Depth Waypoints (3 different depths 2m,4m,6m, holds 5s at each, once finished at 6m, comes back up without stoping) 
-  int diveDelay = 5000;                          // ms to hold still at each waypoint
+  //Depth Waypoints (3 different depths 2m,4m,6m, holds 5s at each, once finished at 6m, after 5s comes back up without stoping) 
+  int diveDelay = 5000;                          // ms to hold still at each waypoint can change
   const int num_depth_waypoints = 3;
-  double depth_waypoints[] = { 2.0, 4.0, 6.0 }; // meters — change to 3.0/6.0 if needed
+  double depth_waypoints[] = { 1.0, 2.0, 3.0 }; // meters — change to 3.0/6.0 if needed
   depth_control.init(num_depth_waypoints, depth_waypoints, diveDelay);
 
 
@@ -145,6 +144,7 @@ if (!rgbFound) {
   Serial.println("RGB not found — continuing without it");
   rgbState = "RGB: not connected";
 }
+
   //   while (tcs.begin() != 0) {
   //   Serial.println("No TCS34725 found ... check your connections");
   //   delay(1000);
@@ -152,10 +152,9 @@ if (!rgbFound) {
   // rgb_sensor.init(&tcs);
   //start times
 
-
-  // 30 seconds = 30000ms, adjust as needed
-  //Serial.println("Starting in 30 seconds — close and seal the box!");
-  //delay(30000);
+// Time delay
+  Serial.println("Starting in 4 minutes — close and seal the box!");
+  delay(500);
 
   printer.printMessage("Starting main loop",10);
   loopStartTime = millis();
